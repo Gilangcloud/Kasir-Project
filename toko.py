@@ -4,7 +4,7 @@ from kebutuhan_rumah_tangga import KebutuhanRumahTangga
 from transaksi import Transaksi
 
 class Toko:
-    def _init_(self):
+    def __init__(self):
         self.barang_list = []
         self.transaksi_list = []
 
