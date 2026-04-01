@@ -1,5 +1,5 @@
 class Member:
-    def _init_(self, id_member: str, nama: str):
+    def __init__(self, id_member: str, nama: str):
         self.id_member = id_member
         self.nama = nama
         self.poin = 0
