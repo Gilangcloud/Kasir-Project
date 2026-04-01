@@ -1,5 +1,5 @@
 class Promo:
-    def _init_(self, kode_promo: str, diskon: float):
+    def __init__(self, kode_promo: str, diskon: float):
         self.kode_promo = kode_promo
         self.diskon = diskon
         self.aktif = True
