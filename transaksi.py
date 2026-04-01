@@ -3,7 +3,7 @@ from member import Member
 from promo import Promo
 
 class Transaksi:
-    def _init_(self, id_transaksi: str):
+    def __init__(self, id_transaksi: str):
         self.id_transaksi = id_transaksi
         self.daftar_item = []   # list of (barang, jumlah, subtotal)
         self.total = 0
