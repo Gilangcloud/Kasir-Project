@@ -5,4 +5,4 @@ class KebutuhanRumahTangga(Barang):
         super().__init__(id_barang, nama, harga, stok, "Kebutuhan Rumah Tangga")
 
     def info(self):
-        return f"🧼 Kebutuhan RT: {self.nama} | Rp{self.harga:,} | Stok: {self.stok}"
+        return f"Kebutuhan Rumah Tangga: {self.nama} | Rp{self.harga:,} | Stok: {self.stok}"
