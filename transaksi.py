@@ -5,7 +5,7 @@ from promo import Promo
 class Transaksi:
     def __init__(self, id_transaksi: str):
         self.id_transaksi = id_transaksi
-        self.daftar_item = []   # list of (barang, jumlah, subtotal)
+        self.daftar_item = []   
         self.total = 0
         self.member: Member | None = None
         self.promo: Promo | None = None

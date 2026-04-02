@@ -1,5 +1,17 @@
 from abc import ABC, abstractmethod
 from mixin import LogMixin, ValidasiMixin
+from cryptography.fernet import Fernet
+import os
+
+KEY_FILE = "secret.key"
+
+if not os.path.exists(KEY_FILE):
+    with open(KEY_FILE, "wb") as f:
+        f.write(Fernet.generate_key())
+    print("🔑 File secret.key berhasil dibuat otomatis.")
+
+with open(KEY_FILE, "rb") as f:
+    cipher = Fernet(f.read())
 
 class Barang(ABC, LogMixin, ValidasiMixin):
     def __init__(self, id_barang: str, nama: str, harga: int, stok: int, kategori: str, harga_modal=None):
@@ -7,7 +19,10 @@ class Barang(ABC, LogMixin, ValidasiMixin):
         self.nama = nama
         self.__harga = harga
         self.__stok = stok
-        self.__harga_modal = harga_modal or int(harga * 0.7)
+        
+        modal = str(harga_modal or int(harga * 0.7))
+        self.__harga_modal_encrypted = cipher.encrypt(modal.encode())
+        
         self.kategori = kategori
 
     @property
@@ -24,6 +39,11 @@ class Barang(ABC, LogMixin, ValidasiMixin):
     @property
     def stok(self):
         return self.__stok
+
+    def get_harga_modal(self):
+        """Hanya Owner yang boleh melihat harga modal (sudah didekripsi)"""
+        decrypted = cipher.decrypt(self.__harga_modal_encrypted).decode()
+        return int(decrypted)
 
     def kurangi_stok(self, jumlah: int):
         self.validasi_jumlah(jumlah)
