@@ -1,101 +1,103 @@
+from toko import Toko
 from makanan import Makanan
 from minuman import Minuman
 from kebutuhan_rumah_tangga import KebutuhanRumahTangga
+from member import Member
+from promo import Promo
 from transaksi import Transaksi
-from toko import Toko
-
-
-def tambah_barang_interaktif(toko: Toko):
-    jenis = input("Jenis barang (Makanan/Minuman/KebutuhanRumahTangga): ")
-    kode = input("Kode barang: ")
-    nama = input("Nama barang: ")
-
-    try:
-        harga = int(input("Harga barang: "))
-        stok = int(input("Stok barang: "))
-    except ValueError:
-        print("Input harga/stok harus angka. Gagal menambah barang.")
-        return
-
-    jenis_normal = jenis.strip().lower().replace(" ", "")
-
-    if jenis_normal == "makanan":
-        kadaluarsa = input("Tanggal kadaluarsa (YYYY-MM-DD): ")
-        toko.tambah_barang(Makanan(kode, nama, harga, stok, kadaluarsa))
-    elif jenis_normal == "minuman":
-        try:
-            volume = int(input("Volume minuman (ml): "))
-        except ValueError:
-            print("Volume harus angka. Gagal menambah barang.")
-            return
-        toko.tambah_barang(Minuman(kode, nama, harga, stok, volume))
-    elif jenis_normal in ("kebutuhanrumahtangga", "kebutuhanrumah" , "kebutuhanrumah tangga"):
-        toko.tambah_barang(KebutuhanRumahTangga(kode, nama, harga, stok))
-    else:
-        print("Jenis barang tidak valid.")
-
-
-def proses_transaksi_interaktif(toko: Toko):
-    id_transaksi = input("ID transaksi: ")
-    if not id_transaksi:
-        print("ID transaksi tidak boleh kosong.")
-        return
-
-    barang_nama = input("Nama barang yang akan dibeli: ")
-    barang = toko.cari_barang(barang_nama)
-    if not barang:
-        print("Barang tidak ditemukan.")
-        return
-
-    try:
-        jumlah = int(input("Jumlah pembelian: "))
-    except ValueError:
-        print("Jumlah harus angka.")
-        return
-
-    transaksi = Transaksi(id_transaksi)
-
-    try:
-        transaksi.tambah_item(barang, jumlah)
-    except ValueError as e:
-        print("Transaksi gagal: ", e)
-        return
-
-    total = transaksi.proses_transaksi()
-    toko.transaksi_list.append(transaksi)
-    print(f"Transaksi berhasil. Total bayar: Rp{total:,}")
-
 
 if __name__ == "__main__":
-    print("selamat datang di toko kami")
+    print("SELAMAT DATANG DI KASIR")
     toko = Toko()
 
-    toko.tambah_barang(Makanan("036355D", "Indomie", 5000, 80, "2026-12-31"))
-    toko.tambah_barang(Makanan("036378G", "Intermi", 3000, 50, "2025-10-01"))
-    toko.tambah_barang(Minuman("036378K", "Coca-Cola", 10000, 50, 330))
-    toko.tambah_barang(KebutuhanRumahTangga("036789Y", "Sabun", 15000, 60))
+    toko.tambah_barang(Makanan("001", "Indomie", 3000, 100, "2026-12-31"))
+    toko.tambah_barang(Minuman("002", "Aqua", 5000, 50, 600))
+    toko.tambah_barang(KebutuhanRumahTangga("003", "Sabun", 10000, 20))
 
     while True:
-        print("\nMenu:")
-        print("1. Lihat semua barang")
-        print("2. Tambah barang")
-        print("3. Lakukan transaksi")
-        print("4. Laporan transaksi")
-        print("5. Keluar")
-
-        pilihan = input("Pilih menu: ")
+        print("\n" + "="*50)
+        print("1. Lihat Stok Barang")
+        print("2. Transaksi Baru")
+        print("3. Tambah Stok Barang")
+        print("4. Keluar")
+        print("="*50)
+        pilihan = input("Pilih menu (1-4): ").strip()
 
         if pilihan == "1":
             toko.laporan_stok()
-        elif pilihan == "2":
-            tambah_barang_interaktif(toko)
-        elif pilihan == "3":
-            proses_transaksi_interaktif(toko)
-        elif pilihan == "4":
-            toko.laporan_transaksi()
-        elif pilihan == "5":
-            print("Terima kasih telah berbelanja di toko kami!")
-            break
-        else:
-            print("Pilihan tidak valid. Silakan coba lagi.")
 
+        elif pilihan == "2": 
+            print("\n === TRANSAKSI BARU ===")
+            trans = Transaksi(f"TRX-{len(toko.transaksi_list) + 1:04d}")
+
+            # Tambah barang ke transaksi (bisa lebih dari 1 item)
+            while True:
+                nama = input("\nNama barang (kosong untuk selesai): ").strip()
+                if not nama:
+                    break
+
+                barang = toko.cari_barang(nama)
+                if not barang:
+                    print(" Barang tidak ditemukan!")
+                    continue
+
+                try:
+                    jumlah = int(input(f"Jumlah {barang.nama} (stok saat ini: {barang.stok}): "))
+                    trans.tambah_item(barang, jumlah)
+                    print(f" {jumlah} {barang.nama} ditambahkan ke keranjang")
+                except ValueError as e:
+                    print(f" Error: {e}")
+
+            
+            if input("\nApakah pelanggan member? (y/n): ").lower() == "y":
+                member = Member("M001", "Budi Santoso")   
+                trans.member = member
+                print(f"Member {member.nama} terdaftar")
+
+            if input("Gunakan promo? (y/n): ").lower() == "y":
+                kode = input("Masukkan kode promo: ").strip().upper()
+                if kode == "DISKON10":
+                    promo = Promo("DISKON10", 0.10)
+                    trans.apply_promo(promo)
+                    print(" Promo 10% berhasil diterapkan")
+                else:
+                    print(" Kode promo tidak valid")
+
+            try:
+                total_bayar = trans.proses_transaksi()
+                print("\n" + "="*40)
+                print(" TRANSAKSI BERHASIL!")
+                print(f"ID Transaksi : {trans.id_transaksi}")
+                print(f"Total Bayar  : Rp{total_bayar:,}")
+                if trans.member:
+                    print(f"Poin didapat : {trans.member.poin}")
+                print("="*40)
+
+                toko.transaksi_list.append(trans)
+                toko.laporan_stok()   # tampilkan stok setelah transaksi
+            except Exception as e:
+                print(f" Terjadi kesalahan: {e}")
+
+        elif pilihan == "3":  # ==================== TAMBAH STOK ====================
+            print("\n === TAMBAH STOK BARANG ===")
+            nama = input("Nama barang yang akan ditambah stok: ").strip()
+            barang = toko.cari_barang(nama)
+
+            if not barang:
+                print(" Barang tidak ditemukan!")
+            else:
+                try:
+                    jumlah = int(input(f"Masukkan jumlah stok baru untuk {barang.nama} (stok saat ini: {barang.stok}): "))
+                    barang.tambah_stok(jumlah)
+                    print(f" Stok {barang.nama} berhasil ditambah {jumlah} unit")
+                    print(f"   Stok sekarang: {barang.stok}")
+                except ValueError as e:
+                    print(f" Error: {e}")
+
+        elif pilihan == "4":
+            print("\n Terima kasih telah menggunakan Sistem Toko Swalayan OOP!")
+            print("Semoga presentasi kalian mendapat nilai 100! 🎉")
+            break
+
+        else:
+            print(" Pilihan tidak valid! Silakan pilih 1-4.")
