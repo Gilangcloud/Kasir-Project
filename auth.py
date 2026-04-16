@@ -18,9 +18,10 @@ class User:
         return self.password == password
 
 USERS = {
-    "kasir": User("kasir", "123", "Kasir"),
-    "admin": User("admin", "123", "Administrator"),
-    "owner": User("owner", "123", "Owner")
+    "alika": User("alika", "212", "Kasir"),
+    "atna": User("atna", "123", "Kasir"),
+    "rafiq": User("rafiq", "123", "Administrator"),
+    "gilang": User("gilang", "123", "Owner")
 }
 
 def login():
