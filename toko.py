@@ -6,7 +6,8 @@ from transaksi import Transaksi
 class Toko:
     def __init__(self):
         self.barang_list = []      
-        self.transaksi_list = []   
+        self.transaksi_list = []  
+        self.member_list = [] 
 
     def tambah_barang(self, barang):
         """Menambahkan barang baru ke toko"""
@@ -42,3 +43,6 @@ class Toko:
 
         for t in self.transaksi_list:
             print(f"ID: {t.id_transaksi} | Total: Rp{t.total:,}")
+    
+    def tambah_member(self, member):
+        self.member_list.append(member)

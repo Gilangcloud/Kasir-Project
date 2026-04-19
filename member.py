@@ -6,3 +6,6 @@ class Member:
 
     def tambah_poin(self, jumlah: int):
         self.poin += jumlah
+    
+    def info(self):
+        return f"Total point {self.poin}"
