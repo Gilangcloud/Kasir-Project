@@ -6,6 +6,7 @@ from member import Member
 from promo import Promo
 from transaksi import Transaksi
 from auth import login
+from datetime import datetime
 
 if __name__ == "__main__":
     print("="*70)
@@ -90,6 +91,22 @@ if __name__ == "__main__":
                             print("❌ Barang tidak ditemukan!")
                             continue
 
+                        barang = toko.cari_barang(nama)
+                        if not barang:
+                            print("❌ Barang tidak ditemukan!")
+                            continue
+
+                        if isinstance(barang, Makanan):
+                            try:
+                                exp_date = datetime.strptime(barang.kadaluarsa, "%Y-%m-%d").date()
+                                hari_ini = datetime.now().date()
+                                    
+                                if exp_date < hari_ini:
+                                    print(f"❌ DITOLAK: {barang.nama} sudah KADALUARSA sejak {barang.kadaluarsa}!")
+                                    continue 
+                            except:
+                                pass 
+
                         try:
                             jumlah = int(input(f"Jumlah {barang.nama} (stok saat ini: {barang.stok}): "))
                             if jumlah <= 0:
@@ -107,24 +124,38 @@ if __name__ == "__main__":
                             break
                         continue
 
-                    if input("\nApakah Punya Member? (y/n): ").lower() == "y":
-                            print("\n=== DAFTAR MEMBER TERSEDIA ===")
-                            for i, m in enumerate(toko.member_list, 1):
-                                print(f"{i}. {m.id_member} - {m.nama} (Poin: {m.poin})")
-                            print(f"{len(toko.member_list) + 1}. Tambah Member Baru")
-
-                            pilih = int(input("\nPilih member: "))
+                    tanya_member = input("\nApakah pelanggan memiliki Member? (y/n): ").strip().lower()
+                    
+                    if tanya_member == "y":
+                        print("\n=== DAFTAR MEMBER TERSEDIA ===")
+                        for i, m in enumerate(toko.member_list, 1):
+                            print(f"{i}. {m.id_member} - {m.nama} (Poin: {m.poin})")
                             
-                            if pilih <= len(toko.member_list):
+                        try:
+                            pilih = int(input("\nPilih nomor member: "))
+                            if 1 <= pilih <= len(toko.member_list):
                                 member = toko.member_list[pilih - 1]
+                                trans.member = member
+                                print(f"✅ Member aktif: {member.nama}")
                             else:
-                                id_baru = input("ID Member baru: ").strip().upper()
-                                nama_baru = input("Nama Member baru: ").strip()
-                                member = Member(id_baru, nama_baru)
-                                toko.tambah_member(member) 
-                                print(f"✅ Member {nama_baru} tersimpan di sistem!")
-
+                                print("❌ Pilihan tidak valid, melanjutkan tanpa member.")
+                        except ValueError:
+                            print("❌ Input salah, melanjutkan tanpa member.")
+                            
+                    elif tanya_member == "n":
+                        buat_baru = input("Apakah pelanggan ingin membuat Member baru? (y/n): ").strip().lower()
+                        if buat_baru == "y":
+                            id_baru = f"M{len(toko.member_list) + 1:03d}" 
+                            nama_baru = input("Masukkan Nama Member baru: ").strip()
+                            
+                            member = Member(id_baru, nama_baru)
+                            toko.tambah_member(member) 
                             trans.member = member
+                            print(f"✅ Member baru '{nama_baru}' (ID: {id_baru}) tersimpan dan aktif!")
+                        else:
+                            print("Transaksi dilanjutkan tanpa member.")
+                    
+                    
 
                     if input("Gunakan promo? (y/n): ").lower() == "y":
                         kode = input("Masukkan kode promo: ").strip().upper()
@@ -168,7 +199,6 @@ if __name__ == "__main__":
                 sub_pilihan = input("Pilih (1/2): ").strip()
 
                 if sub_pilihan == "1":
-                    # --- LOGIKA LAMA (TAMBAH STOK) ---
                     nama = input("Nama barang: ").strip()
                     barang = toko.cari_barang(nama)
                     if barang:
