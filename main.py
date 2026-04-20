@@ -7,6 +7,7 @@ from promo import Promo
 from transaksi import Transaksi
 from auth import login
 from datetime import datetime
+from mixin import LogMixin, ValidasiMixin
 
 if __name__ == "__main__":
     print("="*70)
@@ -14,6 +15,10 @@ if __name__ == "__main__":
     print("="*70)
 
     toko = Toko()
+    
+    logger = LogMixin() 
+    logger.log("Sistem Kasir (KASIR) mulai dijalankan.") 
+    
     toko.tambah_barang(Makanan("001", "Indomie", 3000, 100, "2026-12-31"))
     toko.tambah_barang(Minuman("002", "Aqua", 5000, 50, 600))
     toko.tambah_barang(KebutuhanRumahTangga("003", "Sabun", 10000, 20))
@@ -39,6 +44,7 @@ if __name__ == "__main__":
                     konfirmasi = input("Apakah Anda yakin ingin keluar dari program? (y/n): ").strip().lower()
                     
                     if konfirmasi == "y":
+                        logger.log("Sistem Kasir (KASIR) dihentikan.")
                         print("👋 Terima kasih telah menggunakan sistem. Sampai jumpa!")
                         exit()
                     else:
@@ -47,6 +53,8 @@ if __name__ == "__main__":
 
             else:
                 print(f"\n✅ Login berhasil! Selamat datang, {current_user.role.upper()} {current_user.username.upper()}")
+
+                logger.log(f"User '{current_user.username}' berhasil login sebagai {current_user.role}") 
                 break   
 
         while True:
@@ -73,9 +81,10 @@ if __name__ == "__main__":
             pilihan = input("\nPilih menu (1-5): ").strip()
 
             if pilihan == "1":
+                logger.log(f"User '{current_user.username}' melihat laporan stok.")
                 toko.laporan_stok()
 
-            elif pilihan == "2":
+            elif pilihan == "2" and current_user.role in ["Administrator", "Owner", "Kasir"]:
                 while True:
                     print("\n💰 === TRANSAKSI BARU ===")
                     trans = Transaksi(f"TRX-{len(toko.transaksi_list) + 1:04d}")
@@ -85,11 +94,6 @@ if __name__ == "__main__":
                         nama = input("\nNama barang (kosong = selesai): ").strip()
                         if not nama:
                             break
-
-                        barang = toko.cari_barang(nama)
-                        if not barang:
-                            print("❌ Barang tidak ditemukan!")
-                            continue
 
                         barang = toko.cari_barang(nama)
                         if not barang:
@@ -109,14 +113,15 @@ if __name__ == "__main__":
 
                         try:
                             jumlah = int(input(f"Jumlah {barang.nama} (stok saat ini: {barang.stok}): "))
-                            if jumlah <= 0:
-                                print("❌ Jumlah harus lebih dari 0!")
-                                continue
+                            ValidasiMixin.validasi_jumlah(jumlah)
                             trans.tambah_item(barang, jumlah)
                             print(f"✅ {jumlah} {barang.nama} ditambahkan ke keranjang")
+                            
+                            logger.log(f"Kasir '{current_user.username}' menambahkan {jumlah} {barang.nama} ke keranjang.")
                             item_count += 1
-                        except ValueError:
-                            print("❌ Input jumlah harus berupa angka!")
+                            
+                        except ValueError as e:
+                            print(f"❌ Error: {e if str(e) == 'Jumlah harus lebih dari 0' else 'Input jumlah harus berupa angka!'}")
 
                     if item_count == 0:
                         print("❌ Transaksi dibatalkan karena tidak ada barang yang dimasukkan.")
@@ -152,11 +157,11 @@ if __name__ == "__main__":
                             toko.tambah_member(member) 
                             trans.member = member
                             print(f"✅ Member baru '{nama_baru}' (ID: {id_baru}) tersimpan dan aktif!")
+                            
+                            logger.log(f"Member baru terdaftar: {nama_baru} ({id_baru}) oleh {current_user.username}")
                         else:
                             print("Transaksi dilanjutkan tanpa member.")
                     
-                    
-
                     if input("Gunakan promo? (y/n): ").lower() == "y":
                         kode = input("Masukkan kode promo: ").strip().upper()
                         if kode == "DISKON10":
@@ -182,11 +187,10 @@ if __name__ == "__main__":
                         if trans.member:
                             print(f"👤 Member: {trans.member.nama}")
                             print(f"✨ Total Poin : {trans.member.poin} poin")
-                            
                         toko.transaksi_list.append(trans)
+                        logger.log(f"Transaksi {trans.id_transaksi} berhasil. Total: Rp{total_bayar:,} (Kasir: {current_user.username})")
                         toko.laporan_stok()
                         break
-
                     except Exception as e:
                         print(f"❌ Terjadi kesalahan: {e}")
                         if input("\nMau mencoba transaksi lagi? (y/n): ").lower() != "y":
@@ -204,13 +208,13 @@ if __name__ == "__main__":
                     if barang:
                         try:
                             jumlah = int(input(f"Jumlah stok (stok saat ini: {barang.stok}): "))
-                            if jumlah <= 0:
-                                print("❌ Jumlah harus lebih dari 0!")
-                            else:
-                                barang.tambah_stok(jumlah)
-                                print(f"✅ Stok {barang.nama} berhasil ditambah {jumlah} unit")
-                        except ValueError:
-                            print("❌ Input jumlah harus berupa angka!")
+                            ValidasiMixin.validasi_jumlah(jumlah)
+                            barang.tambah_stok(jumlah)
+                            print(f"✅ Stok {barang.nama} berhasil ditambah {jumlah} unit")
+                            logger.log(f"User '{current_user.username}' menambah stok {barang.nama} sebanyak {jumlah} unit.")
+                            
+                        except ValueError as e:
+                            print(f"❌ Error: {e if str(e) == 'Jumlah harus lebih dari 0' else 'Input jumlah harus berupa angka!'}")
                     else:
                         print("❌ Barang tidak ditemukan!")
 
@@ -242,6 +246,9 @@ if __name__ == "__main__":
                             toko.tambah_barang(barang_baru)
                             print(f"✅ Barang '{nama_baru}' (ID: {id_baru}) berhasil ditambahkan ke sistem!")
                             
+                            
+                            logger.log(f"User '{current_user.username}' menambahkan barang baru: {nama_baru} ({id_baru})")
+                            
                         except ValueError:
                             print("❌ Error: Pastikan input Harga, Stok, dan Volume berupa ANGKA!")
                     else:
@@ -250,6 +257,7 @@ if __name__ == "__main__":
                     print("❌ Pilihan tidak valid!")
 
             elif pilihan == "4" and current_user.role == "Owner":
+                logger.log(f"Owner '{current_user.username}' mengakses data Harga Modal.")
                 print("\n🔑 === HARGA MODAL (TERENKRIPSI) ===")
                 for b in toko.barang_list:
                     print(f"{b.nama:15} → Harga Modal: Rp{b.get_harga_modal():,}")
@@ -259,6 +267,7 @@ if __name__ == "__main__":
                 (pilihan == "3" and current_user.role == "Kasir"):
                 
                 print(f"\n👋 Logout berhasil, {current_user.role} {current_user.username.upper()}!")
+                logger.log(f"User '{current_user.username}' melakukan logout.")
                 
                 pilihan_logout = input("\nApa yang ingin Anda lakukan?\n1. Ganti Akun\n2. Keluar Program\nPilih (1/2): ").strip()
                 
@@ -266,9 +275,9 @@ if __name__ == "__main__":
                     print("\n🔄 Mengalihkan ke halaman login...")
                     break   
                 else:
+                    logger.log("Sistem Kasir (KASIR) dihentikan.") 
                     print("👋 Terima kasih telah menggunakan sistem. Sampai jumpa!")
                     exit()
 
             else:
                 print("❌ Pilihan tidak valid atau tidak diizinkan untuk role anda.")
-
